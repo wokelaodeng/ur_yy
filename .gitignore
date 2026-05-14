@@ -1,22 +1,8 @@
-# ROS 2 build outputs
 build/
 install/
 log/
-**/build/
-**/install/
-**/log/
-
-# Local dependency builds/caches
 ur_ultrasonic_scan_deps/
-
-# Local runtime outputs at workspace roots
-/target_*.pcd
-/ur_ultrasonic_scan-master/target_*.pcd
-/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master/target_*.pcd
-
-# Local agent/editor state
 .agents/
 .codex/
-.vscode/
-*.swp
-*~
+运行生成的 target_*.pcd
+

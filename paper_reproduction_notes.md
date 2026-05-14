@@ -69,7 +69,7 @@
 
 | 论文模块 | 仓库状态 | 复现建议 |
 |---|---|---|
-| UR 机械臂/夹具/传感器建模 | 基本具备，但型号是 `ur7e` 风格配置，不是论文 UR3 | 如果你的机械臂与仓库一致，可以优先用仓库；若严格复论文 UR3，需要改 MoveIt config |
+| UR 机械臂/夹具/传感器建模 | 基本具备，但型号是 `ur7e` 风格配置，不是论文 UR3 | 你的机械臂与仓库一致|
 | 深度/RGB 相机 | D435i 采集和点云处理已具备 | 直接用 |
 | 相机-机器人标定 | 仓库依赖 TF 转换；论文强调不要求精确标定 | 工程运行可继续用 TF；做论文式 RL 时可弱化标定依赖 |
 | 超声图像 | 仓库未见完整采集/处理链路 | 需新增 ROS2 节点发布 US image |
@@ -135,7 +135,7 @@ target_pose.z += clamp(delta_z, -0.001, 0.001)
 建议新增目录：
 
 ```text
-ur_ultrasonic_scan/src/rl_ultrasound/
+ur_ultrasonic_scan-master/src/rl_ultrasound/
   envs/
     pybullet_ultrasound_env.py
     ros2_real_env.py

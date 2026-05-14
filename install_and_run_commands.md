@@ -60,39 +60,49 @@ rosdep install --from-paths src --ignore-src -r -y
 
 ```bash
 cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan
-source /opt/ros/$ROS_DISTRO/setup.bash
+source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 source install/setup.bash
 
-pkill -f gzserver
-pkill -f gzclient
-pkill -f gazebo
-
-cd ~/documents/learning/ur_lk/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+conda deactivate 2>/dev/null || true
 source /opt/ros/humble/setup.bash
-source install/setup.bash
-export LD_LIBRARY_PATH=/home/user/documents/learning/ur_lk/ur_ultrasonic_scan_deps/pcl-1.13.0-install/lib:$LD_LIBRARY_PATH
-ros2 launch robot_camera_control_sim sim_bringup.launch.py
+export PCL_ROOT=/home/user/documents/learning/RL_pre/ur_ultrasonic_scan_deps/pcl-1.13.0-install
+export CMAKE_PREFIX_PATH=$PCL_ROOT:$CMAKE_PREFIX_PATH
+export LD_LIBRARY_PATH=$PCL_ROOT/lib:$LD_LIBRARY_PATH
+colcon build --symlink-install
+
 
 ```
 
 ## 5. 仿真运行
 
 ```bash
+pkill -f gzserver
+pkill -f gzclient
+pkill -f gazebo
+
+cd ~/documents/learning/RL_pre/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+export LD_LIBRARY_PATH=/home/user/documents/learning/RL_pre/ur_ultrasonic_scan_deps/pcl-1.13.0-install/lib:$LD_LIBRARY_PATH
+ros2 launch robot_camera_control_sim sim_bringup.launch.py
+
 ros2 launch robot_camera_control_sim sim_bringup.launch.py
 ```
 
 ## 6. 真实 D435i 点云采集
 
 ```bash
+
 ros2 launch realsense2_camera rs_launch.py pointcloud.enable:=true align_depth.enable:=true
 ```
 
 另开终端：
 
 ```bash
-cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan
-source /opt/ros/$ROS_DISTRO/setup.bash
+cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 run camera_use my_camera_use_new
 ```
