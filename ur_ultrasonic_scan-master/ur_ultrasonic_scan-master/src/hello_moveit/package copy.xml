@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>hello_moveit</name>
+  <version>0.0.0</version>
+  <description>MoveIt with PCL visualization for 3D scanning</description>
+  <maintainer email="lk@todo.todo">lk</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- 自定义消息生成 -->
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <!-- ROS2核心依赖 -->
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <!-- MoveIt依赖 -->
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_visual_tools</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>shape_msgs</depend>
+
+  <!-- Eigen3 -->
+  <depend>eigen3_cmake_module</depend>
+  <depend>libeigen3-dev</depend>
+
+  <!-- PCL依赖 -->
+  <depend>pcl_conversions</depend>
+  <depend>libpcl-all-dev</depend>
+
+  <!-- VTK依赖（关键！） -->
+  <depend>vtk</depend>  <!-- 或 libvtk9-dev，根据系统选择 -->
+
+  <!-- 测试依赖 -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

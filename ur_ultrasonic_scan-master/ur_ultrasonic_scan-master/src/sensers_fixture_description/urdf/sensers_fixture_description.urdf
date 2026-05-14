@@ -1,0 +1,43 @@
+
+<robot name="sensers_fixture_description">
+  <link
+    name="sensers_fixture">
+    <inertial>
+      <origin
+        xyz="4.18735556545285E-09 0.0324554574961351 -6.82594278236109E-08"
+        rpy="0 0 0" />
+      <mass
+        value="0.0954684915143987" />
+      <inertia
+        ixx="9.30657043025666E-05"
+        ixy="-1.02571703263879E-11"
+        ixz="-8.93160989274152E-13"
+        iyy="3.45675447178869E-05"
+        iyz="1.63617281151604E-10"
+        izz="9.81368067608651E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://sensers_fixture_description/meshes/sensers_fixture.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://sensers_fixture_description/meshes/sensers_fixture.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

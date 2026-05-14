@@ -1,0 +1,716 @@
+            IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 68, NO. 9, SEPTEMBER 2021                                                                   2787
+
+
+
+
+   Autonomic Robotic Ultrasound Imaging System
+         Based on Reinforcement Learning
+                        Guochen Ning, Xinran Zhang , and Hongen Liao , Senior Member, IEEE
+
+
+    Abstract—Objective: In this paper, we introduce an au-                        like ultrasound (US)-guided endovascular navigation [3] and
+ tonomous robotic ultrasound (US) imaging system based                            abdominal aorta imaging [4]. Operator experience is the im-
+ on reinforcement learning (RL). The proposed system and                          portant factor in affecting the quality and efficiency of man-
+ framework are committed to controlling the US probe to
+ perform fully autonomous imaging of a soft, moving and                           ually operated ultrasound imaging systems and may lead to
+ marker-less target based only on single RGB images of the                        high inter-operator variability and potential instability [5]. In
+ scene. Methods: We propose several different approaches                          contrast, robotic ultrasound systems have better stability and
+ and methods to achieve the following objectives: real-time                       flexibility, especially in a long-term ultrasound scanning process
+ US probe controlling, soft surface constant force tracking                       [6], [7]. Medical robots also depend on multiform high-precision
+ and automatic imaging. First, to express the state of the
+ robotic US imaging task, we proposed a state represen-                           information. Among medical robotic instruments, automatic US
+ tation model to reduce the dimensionality of the imaging                         imaging systems have been widely studied. Ultrasonic imaging
+ state and encode the force and US information into the                           is a popular and fast noninvasive imaging method, and its
+ scene image space. Then, an RL agent is trained by a policy                      automated operation is of great help to improve the imaging
+ gradient theorem based RL model with the single RGB im-                          efficiency. Especially in robotic surgery, accurate and automatic
+ age as the only observation. To achieve adaptable constant
+ force tracking between the US probe and the soft moving                          control over the movement of the US probe is the key point of the
+ target, we propose a force-to-displacement control method                        automatic ultrasound system. Generally, the accuracy of the US
+ based on an admittance controller. Results: In the simula-                       probe’ position and stable ultrasound probe control are important
+ tion experiment, we verified the feasibility of the integrated                   factors of image quality. After the target position is obtained, an
+ method. Furthermore, we evaluated the proposed force-to-                         appropriate contact force between the US probe and the target
+ displacement method to demonstrate the safety and effec-
+ tiveness of adaptable constant force tracking. Finally, we                       affect both the imaging quality and the safety of the system
+ conducted phantom and volunteer experiments to verify                            [8]. In addition, the movement of the target and the surface
+ the feasibility of the method on a real system. Conclusion:                      deformation also bring challenges to the accurate control of the
+ The experiments indicated that our approaches were stable                        ultrasound probe. All these demands depend on high-precision
+ and feasible in the autonomic and accurate control of the                        information acquisition devices, such as 3D cameras and precise
+ US probe. Significance: The proposed system has potential
+ application value in the image-guided surgery and robotic                        force sensors.
+ surgery.                                                                            At present, multiple control models have been used in some
+    Index Terms—Automatic ultrasound imaging, deep rein-                          clinical robotic US systems. Most of these methods are based
+ forcement learning, robotic ultrasound system.                                   on waypoints and marker-based automatic control methods [9],
+                                                                                  [10]. 3D scene reconstructed-based path planning and marker-
+                            I. INTRODUCTION                                       based object pose estimation are typical methods. Based on this
+                                                                                  mode, previous robot ultrasonic systems used the 3D camera to
+         EDICAL robots have been developed and applied in
+ M       many fields such as minimally invasive surgery, image-
+ guided surgery and rehabilitation [1], [2]. In general, clinical
+                                                                                  collect and reconstruct the surface of the scene and planned
+                                                                                  the robot movement path according to the analyzed surface
+                                                                                  [6]–[11]. Some researches combined force sensors and adjusted
+ ultrasound scanning relies on manual navigation of the probe
+                                                                                  the contact force from the movement of the US probe [12],
+                                                                                  [13]. These control methods have several associated parts and
+    Manuscript received September 2, 2020; revised November 24, 2020              the relevance of each part needs to match a specific task very
+ and January 14, 2021; accepted January 21, 2021. Date of publication
+ January 26, 2021; date of current version August 20, 2021. This work             well. In addition to the intraoperative information, preoperative
+ was supported in part by the National Natural Science Foundation of              information has also been integrated into robot control methods.
+ China under Grants 82027807 and 81771940 and in part by the Na-                  In the researches discussed in [14] and [15], preoperative high-
+ tional Key Research and Development Program of China under Grant
+ 2017YFC0108000 (Corresponding author: Hongen Liao.)                              precision images like magnetic resonance imaging (MRI) and
+    Guochen Ning and Xinran Zhang are with the Department of Biomed-              computerized tomography (CT) were registered with intraopera-
+ ical Engineering, School of Medicine, Tsinghua University, China.                tive US images and visual markers to guide the movement of the
+    Hongen Liao is with the Department of Biomedical Engineering,
+ School of Medicine, Tsinghua University, Beijing 100084, China (e-mail:          US probe and the robot. Also based on tracking implementation,
+ liao@tsinghua.edu.cn).                                                           Chatelain et al. used a robotic arm and a 3 degree of freedom
+    This article has supplementary downloadable material available at             (DOF) visual serving to keep the needle in the center the of US
+ https://doi.org/10.1109/TBME.2021.3054413, provided by the authors.
+    Digital Object Identifier 10.1109/TBME.2021.3054413                           image [16]. These studies analyze the reconstructed environment
+
+                     0018-9294 © 2021 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.
+                                   See https://www.ieee.org/publications/rights/index.html for more information.
+
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+  2788                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 68, NO. 9, SEPTEMBER 2021
+
+
+
+  or visual markers and automatically extract artificially defined                 by learning manipulation of real robots from simulation [36].
+  features from the 3D visual information. However, the scene-                     In the medical field, the US of RL-based methods to control
+  reconstruction-based approach has a general occlusion problem,                   medical devices has already been considered and reviewed. Yu
+  especially in marker-based method. Meanwhile, the accuracy                       et al. proposed a robotic auto-focus system based on a deep
+  and efficiency of these methods depend significantly on the                      Q-learning model [37]. Tan et al. proposed robot-assisted train-
+  accuracy and speed of 3D imaging equipment [17]. Therefore,                      ing in laparoscopy based on DRL [38]. These studies showed
+  the accuracy of the acquisition device has become one of the                     that complex robot control can be realized by DRL based on
+  limitations of the accuracy of the robotic ultrasound system.                    simple and efficient state. Compared with the artificially defined
+  Also, the contact force and the movement of the target have not                  feature extraction based on traditional or deep learning methods
+  been fully considered.                                                           in robotics US imaging control, RL avoids the uncertainty of
+     The clinical US imaging generally faces the problem of inter-                 manually defined states. Therefore, RL is considered a potential
+  ference from target movement. To compensate for the baseline                     solution for an automatic ultrasound imaging task.
+  drift caused by target movement, some studies have realized                         This article introduces a fully autonomous robotic US imaging
+  the tracking of moving surfaces or organs by designing spe-                      system to improve US imaging efficiency and stability. First, an
+  cial mechanical structures and control methods. Sasaki et al.                    RL agent-based proximal policy optimization (PPO) method is
+  proposed a compact portable US diagnostic robot for home                         utilized to generate robot commands based on predefined reward
+  healthcare based on image matching and robot control [18].                       functions and scenes [39]. The proposed robotic US imaging
+  Similarly, Bowthorpe et al. proposed a predictive feedback                       method is different from the robotic US imaging methods of
+  control scheme for image-guided beating-heart surgery based on                   conventional systems that attempt to estimate surface poses or
+  a Smith predictor [19]. Seo et al. proposed a slave robot based                  plan action path. We use a single RGB image of the scene as the
+  on the rotary Stewart platform to perform real-time US imaging                   only observation for the system. The force state and US image
+  [20]. There are also some researches that controlled the US probe                state are also important factors when describing the state of the
+  based on the ultrasound image information [21]. These works                      system that cannot be observed from the RGB camera. Also,
+  compensated for the errors caused by the target movement at                      for further reducing the dimension of the scene, the proposed
+  some level, but application scenarios are targeted and imitated.                 method comprises a state representation learning (SRL) model to
+  A robust, autonomous, and safe controlling method is important                   reduce the invalid information in the image and encode the invis-
+  for robotic US imaging.                                                          ible information into the latent space [40], [41]. In the part of the
+     The interaction between the robot and the environment is                      US probe adaptable constant force tracking and accurate force
+  complex because of the rich contact between the US probe                         controlling, we put forward the idea of force-to-displacement
+  and the skin. The force control of the ultrasound probe affects                  (F2D) method. The principle of F2D is to set the contact force
+  not only the ultrasound imaging results, but also the safety                     as the action space of the end-effector and map the contact force
+  of the robotic ultrasound system. The conventional force con-                    to the lowest level robot command. The main contributions of
+  trol methods include hybrid position and force control [22],                     this article are:
+  impedance control [23] and admittance control [24]. These                            1) We propose an RL-based robotic US imaging system that
+  methods integrate force control and position control by ana-                             does not require target pose estimation and path planning.
+  lyzing the dynamic relationship between the end of the robotic                           The proposed method directly outputs the action of the
+  arm and the environment and use the same strategy to achieve                             ultrasound probe based on a single RGB image via the
+  force control and position control [22]. Thus, prior knowledge                           state representation model and RL model. The purpose
+  of the environment is important in the controller’s parameters                           of the system is to make automatic ultrasound imaging
+  defining to properly match the environment and the task [25].                            a flexible, marker-less and randomly located target in a
+  Existing researches have proposed many controller designs for                            disturbing environment. Feasibility evaluation and com-
+  overcoming the unknown information of the environment by                                 parison with conventional scene reconstruction methods
+  adjust the parameters of the controller such as fuzzy control                            will be performed.
+  [26], adaptive variable control [27] and reinforcement learning                      2) To obtain a stable US image on a soft target, we pro-
+  [28]. On the contrary, we are committed to adjusting the contact                         pose the F2D method to control the US probe constantly
+  force of the robot directly through interaction with observation                         contacting the target with a safe and proper force. The
+  rather than adjusting the stiffness of the robot.                                        purpose of the method is to realize adaptable constant
+     Deep reinforcement learning (DRL) combines deep learn-                                force tracking of the US probe on an unstable and soft
+  ing (DL) and reinforcement learning (RL) and has proven the                              target. We will compare the effectiveness between the
+  feasibility of this approach in complex decision-making tasks                            F2D and the conventional methods especially in such
+  [29]. Further studies have shown the potential of RL to learn                            contact-rich scenes.
+  controlling directly from observations [30]. In the research of
+  mechanical device control, RL has been applied in some basic
+  scenes including motor skill [31], vehicle control [32] and planar
+  arm movement [33]. In complex decision-making tasks like                                                       II. METHODS
+  door-opening [34] and cap twisting [35], RL-based methods                           The robotic ultrasound imaging system aims to improve the
+  demonstrated excellent control effects. Kumar et al. proposed                    efficiency of the ultrasound imaging process. With reference
+  DRL algorithms that achieved success in robotic grasping tasks                   to manual ultrasonic imaging operation, the system needs to
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+ NING et al.: AUTONOMIC ROBOTIC ULTRASOUND IMAGING SYSTEM BASED ON REINFORCEMENT LEARNING                                                                 2789
+
+
+
+
+ Fig. 1. The proposed methods and framework for automatic ultrasound imaging system including three parts: environment (blue), action decision
+ model (green) and robot controller (red). The environment including all hardware and information including RGB images, ultrasound images and
+ force information. Before the input of the observation for the reinforcement learning model to generate action commands, the ultrasound images
+ and force information are encoded into the RGB image space by the state representation model and the RGB image is set as the only observation.
+ The action commands are converted by the proposed force-to-distance controller and input to the robot to execute the ultrasound imaging actions.
+
+
+ perform real-time action decision-making and control the US                      space, p(st+1 |st , at ) is the stochastic dynamics between states
+ probe fully automatic. In the manual operation process, the                      for a given action, R (s, a) = r ∈ R is the reward function
+ state of the ultrasound image is the criterion for evaluating the                and γ ∈ [01) is the discount factor. The principle of RL is to
+ ultrasound imaging task rather than the target coordinates or                    train an agent following the policy π(a|s) which can maximize
+ contact force.                                                                   the expected reward r by selected an action at based on the
+    To realize the autonomous robotic ultrasound imaging system,                  interaction with current observations ot at time step t. The
+ the focus of our work is on the action decision-making and                       policy is parameterized by θ and defined as πθ (a|s). Herein, we
+ the control method of the US probe. The proposed robot US                        recognize the robotic ultrasound imaging task as a discrete-time
+ imaging system consist of three parts, as illustrated in Fig. 1. The             continuous MDP. The aim of the task is to control the US probe
+ environment part contains all the hardware devices including                     and obtain the US images automatically from a random located
+ an RGB camera, a US probe, an integrated force sensor and a                      target. At time step t, the robot makes an action based on current
+ lightweight robot. The method part contains the reinforcement                    observation to obtain a higher reward value. Following this setup,
+ learning model and the state representation model for action                     a policy gradient theorem is:
+ decision making. The controller part consist of four command                                                       
+ mapping processes to achieve adaptable constant force tracking                          ∇θ J (θ) =          pπ (s)     Qπθ (s, a) ∇θ πθ (a|s)
+ of the US probe. Different from the conventional methods, no                                              s            a
+ coordinate points are collected in the system based on this idea,                                 = Eπ [∇θ log πθ (a|s) Qπθ (s, a)]          (1)
+ which means the dependence of on high-precision collection
+                                                                                                   
+ equipment is avoided in our system. In this section, the proposed                where pπ (s) = t γ t p ( st = s|s0 , π) and Qπθ (s, a) is the
+ robot US imaging method will be introduced and explained in                      action-value function. Based on this theorem, θ is optimized to
+ the following order: Ultrasound imaging environment and re-                      maximize the expected return in a policy gradient algorithm:
+ inforcement learning, state representation learning for invisible                                                                  
+ information encoding, force-to-displacement adaptable constant                                                   
+                                                                                                 ∗
+ force tracking method and training details in simulator and real                               θ = arg max E          γ rt [s0 , π]
+                                                                                                                        t
+                                                                                                                                              (2)
+                                                                                                                θ
+                                                                                                                            t
+ system.
+                                                                                     Considering the limitations of the dataset in the environment,
+ A. Robotic Ultrasound Imaging System and                                         a policy gradient algorithm-based algorithmic solution, PPO
+ Reinforcement Learning                                                           agent, is trained to maximize the loss function [39]:
+                                                                                                                                                  
+    As mentioned above, the environment is defined as the in-                     JtCLIP (θ, θ ) = E JtCLIP (θ) − c1 JtV E (θ ) + c2 H (πθ |st )
+ teraction between the robotic ultrasound device and the target.                                                                                  (3)
+ A standard RL setup is posed in the framework of the Markov                      where and c1 , c2 are weights of loss, and H(πθ |st ) is the
+ decision process (MDP), which can be defined by S, A , p, R                      entropy term. J V E (θ ) is the error term on the value estimation
+ and γ [42]. S is the sets of states, A is the continuous action                  with discount factor γ and target value function to encourage
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+  2790                                                                      IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 68, NO. 9, SEPTEMBER 2021
+
+
+
+  sufficient exploration with H(πθ |st ):
+    J V E (θ ) = (Vθ (st ) − (r (st , at ) + γVθtarget (st+1 )))2 (4)
+  JtCLIP (θ) is the loss that is limited by a clipped ratio  to stabilize
+  the update procedure:
+                           
+      JtCLIP (θ) = Et min rt (θ) Ât (s, a) , clip (rt (θ) ,
+
+                      1 − , 1 + ) Ât (s, a)                                   (5)
+
+  where Ât (s, a) is the advantage estimator and rt (θ) =
+  πθ (a|s)/πθold (a|s) is the probability ratio between current
+                                                                                       Fig. 2. The framework of the state representation model. In the pre-
+  policy and old policy. In the environment, the observation is the                    trained model, the RGB image It is encoded by a convolution auto
+  visual information that is directly composed of a 256×256×3                          encoder network and the latent space of the model is set as the image
+  RGB image. The high-dimensional information of the scene                             state. In another part, a reward prediction network that has the same
+                                                                                       structure is used to encode the reward-related information. The latent
+  can be contained from the scene image, including robot pos-                          space of the prediction model is set as the rest of the state.
+  ture, target position and end-effector position. Moreover, the
+  combination of US images and force information represents
+  effective information related directly to the task. Based on this                       Considering the safety requirements in medical applications,
+  information, the agent will maximize the reward in training                          we also constrain the robotic US imaging task from the reward
+  according to a parameterized policy. Since the dimensions of                         settings. We harshly penalize the agent for applying forces over
+  each state are different, we built a multi-layer perceptron model                    the threshold force and reaching workspace limits. The episode
+  as the policy model with three hidden layers.                                        ends and restarts with these collisions occurring.
+     The task of reaching and scanning a target with a US probe has
+  several related factors. Referring to the manual operation steps in                  B. State Representation and Multiform
+  the US imaging, we incorporate position approaching, contact                         Information Encoding
+  maintaining, and US images into the reward function design.
+  The reward function is the sum of each term with weights. First,                        As mentioned in the previous section, multiform informa-
+  the US probe needs to be moved towards the target in space.                          tion in different dimensions is required to describe the state
+  Therefore, the dense distance reward Rdistance is defined as the                     of the task. The RGB image of the scene provides position-
+  Euclidean distance between the US probe and the target:                              related information, and the US image provides task-related
+                                                                                       information. These high-dimensional states also contain irrele-
+                  Rdistance = −ω1 Pprobe − Ptarget                             (6)   vant information that may cause interference. Transforming the
+                                                                                       high-dimensional image into the low-dimensional state through
+     After the US probe is close enough to the target, the main                        the state representation model can effectively reduce the search
+  reward component is the sum of RU S and Rleison . RU S is a                          space and provide more efficient expression information for RL
+  sparse reward for detecting the existence of US images. Once                         [41].
+  the US image appears, we reward the policy about the similarity                         In our environment, the RGB image is the main high-
+  index of the US image ItU and the template of the physiological                      dimensional state. However, the force information and US in-
+  target ItO that is evaluated by the mutual information score.                        formation cannot be obtained from RGB images. Moreover, the
+                 ω2, if image exist                                                    sparsity of these two parts is different. Since US image state and
+    RU S =                                                                       (7)   force state are correspond directly to the positive value of the
+                 0, otherwise
+                                                                                    reward function, we assume these two states can be represented
+                                                               p ItU , ItO          through the combination of the reward function and the RGB
+    Rlesion = ω3                   p   ItU , ItO       log                     (8)   image. To effectively reduce the dimension of these three states
+                                                                 p ItU p ItO
+                       ItU   ItO                                                       we combined image auto encoding and the reward prediction
+  where p represents the joint probability distribution. RU S and                      model as the state representation model. As shown in Fig. 2, our
+  Rleison encourage the US probe to contact the physiological                          state representing part is an end-to-end model.
+  structure related position as correctly as possible.                                    For image representation, we use a convolutional auto encoder
+     In the last part of the positive reward, we add an additional                     (CAE), which consists of an encoding-decoding model for the
+  reward Rmaintain for encouraging continued scanning.                                 RGB image reconstruction. The encoder consists of three layers
+                                                                                       of convolutional neural network and each layer is combined
+                                                   
+                                                   n
+                                                                                       with an activation layer and a max-pooling layer. The latent
+                       Rmaintain = ω4                        RU S i              (9)   space output by the encoder is composed of a vector with a
+                                                   i=1
+                                                                                       dimension of 128. This latent space StI will be reconstructed
+  where n represent the number of steps in one episode and RU S i                      into the reconstructed image by the decoder. The loss function
+  represent the value of the RU S in every step.                                       is cross-entropy and computed between the reconstructed image
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+ NING et al.: AUTONOMIC ROBOTIC ULTRASOUND IMAGING SYSTEM BASED ON REINFORCEMENT LEARNING                                                                 2791
+
+
+
+
+ It and the real image It . After the training is finished, the latent           dynamitic (ID) method [44]:
+ space StI is set as a part of the current state and the decoding                   q̇ = J T ẋ                                                          (11)
+ layers are abandoned.
+     Similar to image encoding process, we use the same encoding                    τ = ID (q̈des ) = D (q) q̈des + C (q, q̇) q̇des + G (q) (12)
+ model to encode the current image It and the next image It+1 ,                   where J is the end effector Jacobian, D is the mass matrix, C is
+ and output two vectors StR and St+1  R
+                                           with a dimension of 128.               the centrifugal and G is the gravity term. The IK and ID model
+ These two vectors will be input into the reward prediction model                 of the UR3 robot is referenced from [45]. Therefore, we convert
+ which consists of three fully connected layers and an active                     the Fc to the command of the motor. Finally, the command is
+ function. The output of the reward prediction model is defined                   completed by a proportional derivative (PD) controller. We can
+ as the predicted value of the reward. Similarly, the error is                    map the lowest robot command, joints torque (u = τ ∈ T ), to
+ computed between the predicted reward R      t and the real reward
+                                                                                  the desired contact force Fc :
+ Rt . Finally, the image state St and the reward state StR are
+                                    I
+
+ concatenated as the current state St and the invisible information                           u = ID(Kd (q̇ − q̇des ) + Kp (q − qdes ))                  (13)
+ is represented by the visible RGB image. Before training the                        In general, the contact force is generated from the move-
+ state representation model, we will collect data through the RL                  ment of the end-effector. The action space is defined in spatial
+ model training process and the data set contains all the kinds of                position. However, the accuracy of the contact force depends
+ information mentioned before. After the training completed, the                  on the accurate target position and the characteristics of the
+ SR model will be integrated as the previous part of the end-to-end               target. In our method, the positive reward is related mainly to
+ RL process.                                                                      the contacting force and US images and the position reward is
+                                                                                  still needed for encouraging movement towards the target. In
+ C. Force-To-Displacement Control Method for                                      addition, the correspondence between the movement and the
+ Ultrasound Imaging Task                                                          force is not clear for the unknown characteristics of the target.
+    The adaptable constant force tracking of the US probe is                      Thus, we put forward force to the displacement (F2D) method
+ paramount in our US imaging method. In some recent re-                           which integrates the admittance controller and the force action
+ searches, there are some common robot controllers like direct                    space. In the iteration of the RL training, the Fc ∈ R3 is set as
+ torque control, joint space control, impedance control and ad-                   the action space and output by the agent, which means the agent
+ mittance control. Like the reward function design in the previous                will output a desired contact force between the end-effector and
+ section, the robotic ultrasound imaging is associated with both                  the target. The specific definition of the desired contact force
+ task accomplishment and safety. Especially considering the                       is a vector with a dimension of 3 × 1. Each value in the vector
+ environment in the contacting between the end-effector (US                       represents the desired force in the three directions from -15 to 15
+ probe) and soft target, we propose an admittance controller-                     (an empirical value of the contact force), and the symbol of the
+ based force-to-distance control method that is safer and more                    value indicates the direction of the force. When the end-effector
+ efficient to such rich-contact and force-based tasks [28]–[43].                  is not in contact with the environment ( Fc = 0), the robot
+    The admittance controller dynamically adjusts the charac-                     performs a moving action ( Fc = m), as if the end-effector
+ teristics of the end-effector by imitating a spring-damper sys-                  is pulled by an “invisible hand” and moved in space. When the
+ tem. When the robot is in contact with the environment, the                      end-effector is contacted by the target (Fc = 0), this “external
+ admittance is used to describe the characteristics of the robot.                 force” will become the contact force and generate a positive
+ By adjusting the three parameters, B and K of the admittance                     reward. Finally, the actual contact force will be equal to the
+ controller change the force or position between the end-effector                 desired contact force ( Fc = Fc ).
+ and the environment:
+                                                                                  D. Simulation and Hardware System
+   −Fc = M (ẍdes − ẍ) + B (ẋdes − ẋ) + K (xdes − x) (10)
+                                                                                     Considering the huge time-consuming effort of training a real
+ where M is the inertial matrix, B is the damping matrix, K                       robot, the platform of the system includes the simulator and
+ is the stiffness matrix, x is the position vector, xdes is the                   real hardware. The simulator is used for training models and
+ desired position and Fc ∈ R3 is the desired contact force in                     verifying the proposed methods and processes. The feasibility
+ three directions. Due to the stiffness and the characteristic of the             of the entire framework is verified on the real hardware.
+ environment is well known, all parameters of the controller have                    The proposed robotic US imaging system consists of a
+ adjusted manually to match the US imaging task.                                  lightweight robot, an RGB camera, a wireless US scanning de-
+    Assuming the force signal Fc can be gathered by the force                     vice and a built-in force sensor. The US probe (Wireless UProbe
+ sensor from the interaction of the end-effector and the soft                     ultrasonic device, HengTeng, China) is directly mounted onto
+ surface, according to the formula above, the 3-D position cor-                   the end-effector of the robot and outputs real-time US images to
+ rection of the end-effector xc = x − xdes can be transformed                     the computer with 20FPS and the resolution of 256×256×3. The
+ from the contact force Fc . In this way, the desired contact                     RGB camera is located at a proper position to gather the entire
+ force can be converted to position correction. To obtain a lower                 scene. In the system, the coordinates between the camera and
+ level robot command, the desired position is mapped into the                     the robot are without calibration or registration, which means the
+ joint coordinates by the inverse kinematics (IK) and the inverse                 position of the camera has no need to be specific as long as the
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+  2792                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 68, NO. 9, SEPTEMBER 2021
+
+
+
+                                                                                   in the framework was evaluated including the impact of the state
+                                                                                   representation on the system training and the stability of the F2D
+                                                                                   controller for the adaptable constant force tracking of the soft
+                                                                                   surface. In the qualitative assessment section, the feasibility of
+                                                                                   the proposed system through the phantom experiments and the
+                                                                                   volunteer experiment was verified.
+
+                                                                                   A. Feasibility of Autonomous Ultrasound
+                                                                                   Image Acquisition System
+  Fig. 3. The simulation environment (right) is built according to the real           The purpose of the proposed system and methods was to
+  system (left) to reduce the time consumption in training and evaluation.         control the US probe to autonomously image a soft target in a
+                                                                                   changing environment. The RL model was pre-trained with two
+                                                                                   million steps in the simulator to reduce the training time con-
+  robot and the target can be gathered by the camera. To control                   sumption and performed an additional 100 episodes of training
+  the US probe, we use a 6-DoF UR3 robot (UR3, Universal robot,                    in the real system to further optimize the US-related parameters.
+  Denmark). For robotic US system, since the robotic US platform                      To prove the feasibility of the proposed automatic US imaging
+  needs to meet the requirements of clinical usage, the UR3 robot                  system, we evaluated US imaging success rate and efficiency
+  subsystem has been certified for human-machine collaboration                     in the real system. In the experiment, three randomly placed
+  due to compliance with functional safety standards. Therefore,                   soft phantom with different shapes were used as the target. The
+  it is considered safe to interact with the skin directly. The com-               policy used in different phantom experiments was the same as the
+  puting platform includes a CPU (Intel (R) Core (TM) i7-4790K)                    policy trained with Phantom 1. When a stable US image of the
+  and a GPU (NVIDIA GeForce 1080 Ti). The robot responds and                       target was obtained before termination, the task was considered
+  realizes the commands at the frequency of the output actions of                  successful. If the US image was not obtained before the end
+  the agent at 120Hz.                                                              of the movement of the robot or the US probe was out of the
+      In the simulator, we built an environment with the real hard-                workspace or safe force limitation, the task was considered as a
+  ware setup based on the physical simulator PyBullet [46]. As                     failure. In the success rate verification experiment, each marker-
+  shown in Fig. 3, the virtual camera is located at the same related               less phantom was statically placed in 10 different positions.
+  position as the real hardware setup. To simulate the force sensor                   To compare with another typical marker-less method-scene
+  which is integrated at the end of the robot, we set the joint torque             reconstruction, we used a state-of-art high-precision stereo cam-
+  of the end-effector as the contact force between the end-effector                era (Ensenso-N35 stereo camera, IDS, Germany) to perform
+  and the environment. The target moves on the desktop randomly                    the conventional US probe-guiding process.1 The N35 camera
+  in training, and the surface is modeled as a soft material. Due                  was accurately calibrated and registered into the robot’s coor-
+  to the surface of the target needs to be coated with ultrasonic                  dinate space. The reconstructed target surface’s coordinate was
+  couplant, we set the sliding coefficient of friction of the surface              resolved and transformed to the robot for movement. In addition,
+  as a small value. Because of the internal structures of the target               we added the same anthropogenic occlusion as interference (I) in
+  and because the ultrasound images are difficult to model in the                  the two methods to compare the robustness of the framework. A
+  simulator, we instead use the relative position of the ultrasound                total of 18 sets of results were collected. The detailed comparison
+  probe to represent the current state of the ultrasound image in the              from one trial is illustrated in Fig. 4 to indicate the difference
+  simulator, which is consistent with the objective situation in the               intuitively. The ultrasound image of the target was acquired
+  real environment. The ultrasound-related reward function in the                  both in clear and interfered environment. As shown in Figure 4,
+  simulation is represented by the distance between the ultrasound                 because of the proper relative position and contact force between
+  probe and the internal structure of the target. The distance was                 the US probe and the phantom, the internal structure and the
+  based on the prior knowledge of the real phantom and the US                      position of the phantom acquired by our method was complete
+  scanner. The model of the real environment is transferred from                   and proper in the US image. In contrast, the improper contact
+  the model of the simulator and further trained for US-related                    between the US probe and the phantom resulted in lack of
+  optimization.                                                                    completion or even missing of the internal structure in the US
+                                                                                   image acquired by the N35 system.
+                    III. EXPERIMENTS AND RESULTS                                      To further verify the feasibility and robustness of the pro-
+                                                                                   posed framework, we randomly moved the phantom by hand
+     In the experiment, we performed quantitative and qualitative
+                                                                                   in different directions. The movement range of the phantom
+  evaluation for the automatic US robot imaging system. In the
+                                                                                   was limited in the workspace. One process of the experiment is
+  quantitative evaluation, the feasibility experiment for the entire
+                                                                                   shown in Movie 1. During the experiment, the phantom was first
+  system and framework was evaluated by the success rate and
+                                                                                   placed statically on the table. In the beginning of the experiment,
+  the runtime efficiency of the imaging task. A comparison ex-
+                                                                                   the robot moved toward to the phantom and contacted with the
+  periment with a scene reconstruction method was performed
+  to indicate the difference of our method in control accuracy and
+  robustness. Furthermore, the impact of each process and method                     1 [Online]. Available: https://en.ids-imaging.com/ensenso-n35.html
+
+
+
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+ NING et al.: AUTONOMIC ROBOTIC ULTRASOUND IMAGING SYSTEM BASED ON REINFORCEMENT LEARNING                                                                 2793
+
+
+
+                                                                                  surface due to the smooth surface. Fig. 4 showed that the US
+                                                                                  probe in our method accurately contacted with the target based
+                                                                                  on the RGB image both with and without interference. The US
+                                                                                  image of the target was also obtained. The movement speed of
+                                                                                  the robot was limited within 3 cm/s for safety. In the three sets
+                                                                                  of static experiments, the time consumption of the automatic ul-
+                                                                                  trasound imaging process was similar to the freehand processes
+                                                                                  (<20 s).
+                                                                                     In contrast, the target coordinates obtained by the scene
+                                                                                  reconstruction method were largely accurate in the absence
+                                                                                  of interference. But the contact force control based on the
+                                                                                  3D reconstructed method was difficult to be performed accu-
+                                                                                  rately, which result in insufficient US imaging quality. In the
+                                                                                  experiment with interference, the control accuracy of the US
+                                                                                  probe was decreased because the accuracy and integrity of the
+                                                                                  reconstruction scene was significantly affected. The ultrasound
+ Fig. 4. The comparisons of our method and conventional method in                 image could not be obtained. The success rate results indicated
+ ultrasound imaging task. In the proposed method, the single RGB image            that the N35 system could have satisfactory performance only in
+ was set as the observation. The US probe was controlled by the robot to
+ image the phantom in the environment with (a) and without interference           static interference-free environment. However, in the disturbed
+ (b). In the same environments (c) (d), the N35 camera was used to                environment, the success rate was significantly reduced due to
+ obtain the spatial coordinates of the target and guide the movement of           the missing structure of the two overlapping edges at different
+ the ultrasound probe. The ultrasound probe was moved to the obtained
+ coordinates to perform imaging task.                                             depths.
+
+                              TABLE I
+           SUCCESS RATE OF THE ULTRASOUND IMAGING TASK IN                         B. Evaluation of State Representation Model
+                     DIFFERENT ENVIRONMENTS
+                                                                                     In the method evaluation experiment, we were committed to
+                                                                                  verifying the following two aspects, the efficiency of our method
+                                                                                  in the US imaging task and whether the SR model provided the
+                                                                                  agent with task-related information without inputting US state
+                                                                                  and force as the observation. Each experiment in this section was
+                                                                                  performed in the simulator. In each part of the experiment, a total
+                                                                                  of 100 trials were performed and the position of the target was
+                                                                                  random and recorded. Every model in the experiment performed
+                                                                                  1 million steps of training with the same hyperparameters.
+                                                                                     To evaluate the efficiency of our method, the ratio between
+                                                                                  we defined the path of the US probe and the absolute distance
+                                                                                  between the US probe and the target as the index. The path
+                                                                                  of the US probe was the sum of the displacement in each step
+                                                                                  before termination. The targets were placed in different positions
+ phantom successfully. Next, the probe was moved on the surface                   in 100 valid trials. The average efficiency of our system was
+ to acquire the US image of the lesion. Then, the phantom was                     93.7±1.9%, indicating that the actions and paths output by the
+ moved by hand and the probe was still in stable contact with the                 agent before completing the US imaging task were efficient.
+ surface. After the US image of the lesion was obtained again, we                    To evaluate the impact of the SR model, we set up another
+ moved the robot to interfere the system. As shown in the Movie                   three pipelines for comparison. Our method: the method with
+ 1, the probe was controlled back to the surface by the robot, and                complete SR model and the combined latent space was input as
+ the US image of the lesion was acquired again.                                   the observation. Pipeline 1: the method without combining the
+    We also performed experiments on the success rate with                        SR model, and the RGB image were directly inputted into the
+ moving targets. Three different phantoms moved in the same                       agent as the observation. Pipeline 2: the method had direct force
+ direction at different positions. The criterion to judge the US                  state, US state and the encoded image state as the observation.
+ imaging task was same as for the static experiment and the                       Pipeline 3: the method with only the encoded image state as the
+ results of all the success rate experiment are shown in Table I.                 observation. Fig. 5 and Table II illustrated the learning curve and
+ The success rates of US imaging with and without interruption                    success rate achieved by each pipeline in 100 trials. From Fig. 5,
+ were evaluated separately, indicating the basic feasibility of                   the policy with direct image input obtained positive rewards with
+ the proposed method. Furthermore, in the moving phantom                          difficulty, which verified the lack of task-related information
+ experiments, the success rate was decreased but still maintained                 reducing the success rate of the rich-contact tasks. Although the
+ a satisfactory value. The main reason for the decrease in the                    learning curve of the policy with the image encoding model had
+ success rate was the separation of the probe from the phantom                    improvement, the positive reward value was still not effectively
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+  2794                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 68, NO. 9, SEPTEMBER 2021
+
+
+
+
+                                                                                   Fig. 6. Comparison of learning curves of force-to-displacement
+                                                                                   method and displacement-to-force method.
+
+  Fig. 5. Comparisons of learning curves for different pipelines in ultra-
+  sound imaging task.
+                                                                                   by an inverse kinematics controller. Other conditions of the
+                                                                                   environment were unchanged.
+                                TABLE II
+       SUCCESS RATES OF ULTRASOUND IMAGING TASK WITH DIFFERENT                        Figure 6 illustrates the learning curve of two the methods in
+                 PIPELINES IN SIMULATION ENVIRONMENT                               the real system training process. Because positive rewards were
+                                                                                   associated with adaptive constant force and US images, stable
+                                                                                   contact force produced higher policy rewards. The learning
+                                                                                   curve indicated that the F2D method had better performance
+                                                                                   in obtaining positive rewards. Since the characteristics of the
+                                                                                   target were usually uncertain, the mapping relationship from
+                                                                                   distance to contact force was not clear. This also leads to more
+                                                                                   time consumption in learning the relationship. In contrast, the
+                                                                                   proposed method avoided the derivation or acquisition of this
+                                                                                   relationship, and achieved a better contact effect directly via
+  obtained. Compared with the previous pipeline, Pipeline 2 had                    outputting the contact force.
+  not been significantly improved by combining direct force and                       To quantitative evaluate the performance of the F2D method
+  ultrasound information. Although Pipeline 2 contained direct US                  in adaptable constant force tracking, as shown in Fig. 7. We
+  state and force state, but these two states were sparse especially               recorded the force values by the force sensor in the Movie
+  at the time of the US probe was in the air. In contrast, our method              1.2 During the process of imaging, the average value and the
+  significantly improved the learning curve and the success rate.                  standard deviation of the contact force in the z-direction were
+  Even in the absence of force and US information as direct                        11.9 N and 1.7 N. As illuminated in the curve of the force, the
+  observations, our policy could achieve a 93% success rate with                   contact force between the US probe and the surface was properly
+  only RGB images as the observation.                                              stable. Moreover, there was no overshoot of the contact force at
+                                                                                   each moment of contact. During the moving process in the x,
+                                                                                   y-direction, the force in z-direction remained unchanged and
+  C. Evaluation of Force-to-Distance Method
+                                                                                   the force in the x, y-direction indicated that the displacement
+     For US imaging tasks, one of the most important parts of                      of the US probe was not driven by friction but was controlled
+  our method is the adaptable constant force tracking of the                       by the robot. During the interruption process, the contact force
+  US probe. In this section, we evaluated the effectiveness and                    continued to maintain a safe and stable value after the US probe
+  feasibility of the proposed F2D method by comparing the con-                     was back. The force in all three directions remained stable
+  ventional displacement-to-force way. In addition, the stability                  throughout the process even with a slippery soft phantom. The
+  of the method and the security of the system were evaluated on                   experimental results indicated that the proposed control method
+  the real hardware.                                                               has satisfactory performance in the control of the ultrasonic
+     Like the framework introduced before, the proposed method                     probe in a soft environment.
+  converted the output value of the action space as the desired con-
+  tact force and mapped it to the lowest-level robot commands. A                   D. Ultrasound Imaging Acquisition in
+  conventional displacement-to-force framework was performed                       Volunteer Experiment
+  to compare the difference between the proposed action space and
+                                                                                      To verify the feasibility of the proposed system and framework
+  the end-effector’s position action space in US imaging tasks. In
+                                                                                   in human ultrasound imaging tasks, we performed volunteer
+  the conventional displacement-to-force framework, the output
+  value of the action space was used as the end-effector’s position
+  of the US probe and the actions were directly accomplished                         2 Supplementary movie is available in the supporting documents /Movie 1
+
+
+
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+ NING et al.: AUTONOMIC ROBOTIC ULTRASOUND IMAGING SYSTEM BASED ON REINFORCEMENT LEARNING                                                                 2795
+
+
+
+
+ Fig. 7. The curve of contact force in Movie 1. Throughout the ultrasound imaging process, the force remained stable and proper in three directions.
+ In the process where the phantom was moved, the ultrasound probe contacted the surface with a stable z-direction force. The small change value
+ of force in the x, y-direction indicated that the movement of the ultrasound probe was autonomous but not driven by friction.
+
+
+
+ experiments with the real system. During ultrasound imaging
+ of the human body, the baseline drift caused by breathing was
+ the main factor that affected the control accuracy of the system.
+ Therefore, the abdomen area of the volunteer was set as the
+ testing area for the floating on the surface during breathing.
+ Volunteers lay in unspecified positions and the imaging area
+ was within the workspace of the system. The parameter settings
+ of the US probe and ultrasonic couplant were same as in the
+ phantom experiment. To evaluate the control effect of the probe
+ in the human body imaging process more obviously, volunteers
+ took deep breaths during the experiment to make the abdominal
+ surface change. If the force exceeded the set safety value, the
+ process was terminated and the robot returned to a safe posture.
+    During the volunteer experiment, there was no large x, y-
+ displacement of the body, so we recorded the change of the                       Fig. 8. Scenes and results of the respiratory compensation experi-
+ position and force of the ultrasound probe in the z-direction.                   ment. The force and position of the ultrasonic probe in the z-direction
+                                                                                  were recorded. The contact force remained stable in both the breathing
+ The scene and results of the volunteer experiment are shown                      and the motion compensation experiment.
+ in Fig. 8. As shown in the results, irregular movement of the
+ ultrasound probe in the z-direction was caused by the abdominal
+ movement. The average value and standard deviation value of                      probe in the z-direction, the soft phantom was fixed on a lifting
+ the contact force in the z-direction was 11.3 N and 4.8 N in                     platform and moved up and down. As shown in Fig. 8, the
+ the US imaging process. The larger standard deviation value                      average contact force of the ultrasound probe in the z-direction
+ indicated the influence of breathing on the contact force. The                   was 12.1 N.
+ value of the contact force was temporarily decreased or increased                   Furthermore, the lumbar spine of the volunteer was set as the
+ due to the movement of the abdomen caused by the inhalation                      target for the automatic ultrasound imaging test. The preopera-
+ and exhalation of the volunteer but still maintained a suitable                  tive lumbar spine image was manually segmented and used as
+ value for US image acquisition. Overall, the results indicated that              the template for Rlesion to replace the template of the phantom.
+ our robotic ultrasound system could perform stable ultrasound                    In the experiment, the RL model was without further training
+ imaging when the volunteer was breathing or moving slightly. To                  because the imaging area of the volunteer was similar to the
+ quantitatively evaluate the movement accuracy of the ultrasound                  phantom used before. When the arbitrary lumbar vertebrae of
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+  2796                                                               IEEE TRANSACTIONS ON BIOMEDICAL ENGINEERING, VOL. 68, NO. 9, SEPTEMBER 2021
+
+
+
+                                                                                       In the experimental part, the success rate experiment per-
+                                                                                   formed has verified the feasibility of the proposed system and
+                                                                                   method. Compared with the conventional manual defined feature
+                                                                                   extraction methods, our method obtained 20% improvement in
+                                                                                   success rate experiment. The qualitative experiment illustrated
+                                                                                   the accuracy and robustness of the entire framework. Volunteer
+                                                                                   experiments indicated the potential of clinical application of our
+                                                                                   system. To date, our work has been dedicated to proposing a
+                                                                                   new set of processes and methods to achieve a more intelligent
+                                                                                   automatic robot US imaging system. In future work, we will
+                                                                                   focus on typical clinical applications and add more clinical
+                                                                                   information into consideration.
+                                                                                       First, we have proved that the proposed framework and system
+                                                                                   is feasible in principle. In the clinical environment, more specific
+                                                                                   requirements and details need to be considered. In some US
+                                                                                   imaging environments, the ultrasound probe needs to contact
+                                                                                   the surface at a specific posture. One of our future studies is to
+  Fig. 9. Scenes and results of the volunteer experiment. The volunteer
+                                                                                   add more dimensions such as orientation control to the action
+  lumbar spine was set as the ultrasound imaging target. The preopera-             space to deal with more complex environment.
+  tive lumbar spine image was segmented and used as the template to                    In this paper, the proposed ultrasound system was presented
+  calculate Rlesion .
+                                                                                   and validated in a generic ultrasound imaging application. As
+                                                                                   a machine learning approach to solve process decision-making
+  the volunteer were imaged before termination, the task was                       problems, RL has a more direct task representation capability
+  considered successful. The experimental results and scenarios                    compared to standard methods. In contrast, the significance
+  are shown in Fig. 9. As shown in Figure 9, the lumbar spine                      of standard methods and fully supervised learning methods
+  of the volunteer was in the proper position of the US image                      is to improve system accuracy by increasing the recognition
+  in the results of the volunteer experiment. The main structural                  accuracy of targets, rather than directly establishing the rela-
+  landmarks match the template and could be clearly identified                     tionship between the output and the task. Therefore, RL has
+  from the US image. This demonstrated that the ultrasound probe                   potential applications in complex medical scenarios due to its
+  had moved into the correct position and was in contact with the                  characteristics in building the relationship of tasks and actions.
+  skin with the appropriate contact force                                          We will focus on the application and performance of RL-based
+                                                                                   ultrasound robots in different environments and compare them
+                                                                                   with existing methods to further investigate the feasibility of this
+                              IV. DISCUSSION                                       approach in the future work.
+     We have presented a novel system to achieve automatic                             On the other hand, a targeted medical background also brings
+  ultrasound imaging for a moving and soft target. The system                      more complex environment modeling and longer training time.
+  proposed in this article combines the reinforcement learning                     Meanwhile, datasets for medical scenarios are difficult to gather.
+  and state representation models to realize a robust and accurate                 This means the transformation of RL models from simulation
+  action output based on a single RGB camera. In terms of the US                   to real scenarios is very important especially in medical back-
+  imaging control method, contrary to the conventional feature                     grounds. Therefore, domain adaptation-based scalability and
+  extraction method based on traditional segmentation or deep                      model transfer of our ultrasound robotic systems will also be
+  learning that relied on large amounts of existing data and super-                a major topic in the future work. Moreover, this article discusses
+  vised algorithms, the proposed RL based method can learn the                     mainly the method of controlling the ultrasound probe to image
+  control strategy based on exploring the simultaneous feedbacks                   the soft target. In the clinical environment, the ultrasound image
+  and maximizing rewards without the requirement of a current                      itself also has information to guide the movement of the ultra-
+  data set. In terms of system configuration, the proposed method                  sound probe. For example, the location information and move-
+  avoids the reliance on high-precision acquisition equipment in                   ment of targets in the body may need to be considered. In future
+  scene reconstruction and pose estimation. Even in the tasks with                 work, the real-time ultrasound image processing, especially the
+  interference, the proposed method can accurately control the US                  automatic identification and tracking of the internal non-rigid
+  probe to reach the target position and the accuracy of the US                    target, is one of our main interests.
+  probe control is better than the conventional method to some
+  extent. Moreover, the proposed F2D control method achieves a
+  stable force control of the US probe, especially for the soft target.                                        V. CONCLUSION
+  In the case where the characteristic of the target is unknown, the                  In this article, we propose a fully automatic ultrasound imag-
+  proposed method outputs a proper adaptable constant contact                      ing system that combines multiple processes and methods for
+  force for a flexible surface instead of outputting a pre-set force               ultrasound imaging of soft, marker-less and moving targets.
+  or distance increment.                                                           In this system, the combination of the reinforcement learning
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+ NING et al.: AUTONOMIC ROBOTIC ULTRASOUND IMAGING SYSTEM BASED ON REINFORCEMENT LEARNING                                                                         2797
+
+
+
+ model and the state representation model provides spatial action                     [21] G. Ning et al., “Real-time and multimodality image-guided intelligent
+ instructions for the probe under the guidance of the single RGB                           HIFU therapy for uterine fibroid,” Thno, vol. 10, no. 10, pp. 4676–4693,
+                                                                                           Mar. 2020.
+ image. The proposed force-to-displacement control method re-                         [22] T. Yoshikawa, “Dynamic hybrid position/force control of robot
+ alizes the adaptable constant force tracking of the soft target                           manipulators–Description of hand constraints and calculation of joint
+ by the ultrasound probe. Quantitative and qualitative experi-                             driving force,” IEEE J. Robot. Autom., vol. 3, no. 5, pp. 386–392,
+                                                                                           Oct. 1987.
+ ments prove the feasibility and robustness of our system. This                       [23] H. Seraji and R. Colbaugh, “Force tracking in impedance control,” Int. J.
+ system and framework provide a solution for clinical low-cost,                            Robot. Res., vol. 16, no. 1, pp. 97–117, 1993.
+ autonomous ultrasound imaging systems.                                               [24] V. Gullapalli et al., “Learning reactive admittance control,” in Proc. IEEE
+                                                                                           Int. Conf. Robot. Automat., May 1992, pp. 1475–1480.
+                                                                                      [25] H. Bruyninckx and J. De Schutter, “Specification of force-controlled
+                                REFERENCES                                                 actions in the ‘task frame formalism’—A synthesis,” IEEE Trans. Robot.
+                                                                                           Autom., vol. 12, no. 4, pp. 581–589, Aug. 1996.
+  [1] A. Priester, S. Natarajan, and M. O. Culjat, “Robotic ultrasound systems in     [26] B. Baigzadehnoe et al., “On position/force tracking control problem
+      medicine,” IEEE Trans. Ultrason., Ferroelect., vol. 60, no. 3, pp. 507–523,          ofcooperative robot manipulators using adaptive fuzzy backstepping ap-
+      Mar. 2013.                                                                           proach,” ISA Trans., vol. 70, pp. 432–446, 2017.
+  [2] K. Lau et al., “A flexible surgical robotic system for removal of early-        [27] J. Duan et al. “Adaptive variable impedance control for dynamic contact
+      stage gastrointestinal cancers by endoscopic submucosal dissection,” IEEE            force tracking in uncertain environment,” Robot. Auton. Syst., vol. 102,
+      Trans. Ind. Informat, vol. 12, no. 6, pp. 2365–2374, Dec. 2016.                      pp. 54–65, 2018.
+  [3] F. Chen, J. Liu, and H. Liao, “3D Catheter shape determination for              [28] R. Martín-Martín et al., “Variable impedance control in end-effector
+      endovascular navigation using a two-step particle filter and ultrasound              space: An action space for reinforcement learning in contact-rich tasks,”
+      scanning,” IEEE Trans. Med. Imag., vol. 36, no. 3, pp. 685–695, Mar. 2017.           in Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst., Macau, China, 2019,
+  [4] L. Beales et al., “Reproducibility of ultrasound measurement of the ab-              pp. 1010–1017.
+      dominal aorta,” Brit. J. Surg., vol. 98, pp. 1517–1525, 2011.                   [29] K. Arulkumaran et al., “Deep reinforcement learning: A brief survey,”
+  [5] H. N. Cardinal, J. D. Gill, and A. Fenster, “Analysis of geometrical                 IEEE Signal. Process. Mag., vol. 34, no. 6, pp. 26–38, Nov. 2017.
+      distortion and statistical variance in length, area, and volume in a linearly   [30] V. Mnih et al., “Human-level control through deep reinforcement learn-
+      scanned 3-D ultrasound image,” IEEE Trans. Med. Imag., vol. 19, no. 6,               ing,” Nature, vol. 518, no. 7540, pp. 529–533, 2015.
+      pp. 632–651, Jun. 2000.                                                         [31] E. Theodorou et al., “Reinforcement learning of motor skills in high
+  [6] G. T. Sung and I. S. Gill, “Robotic laparoscopic surgery: A comparison               dimensions: A path integral approach,” in Proc. IEEE Int. Conf. Robot.
+      of the da vinci and zeus systems,” Urology, vol. 58, no. 6, pp. 893–898,             Automat., 2010, pp. 2397–2403.
+      2001.                                                                           [32] P. Abbeel et al., “An application of reinforcement learning to aerobatic
+  [7] Q. Huang, J. Lan, and X. Li, “Robotic arm based automatic ultrasound                 helicopter flight,” in Proc. Adv. Neural Inf. Process. Syst., 2006, pp. 1–8.
+      scanning for three-dimensional imaging,” IEEE Trans. Ind. Informat.,            [33] K. M. Jagodnik et al., “Human-like rewards to train a reinforcement
+      vol. 15, no. 2, pp. 1173–1182, Feb. 2019.                                            learning controller for planar arm movement,” IEEE Trans. Hum. Mach.
+  [8] A. M. Priester, S. Natarajan, and M. O. Culjat, “Robotic ultrasound systems          Syst., vol. 46, no. 5, pp. 723–733, Oct. 2016.
+      in medicine,” IEEE Trans. Ultrason., Ferroelect., Freq. Control, vol. 60,       [34] S. Gu et al., “Deep reinforcement learning for robotic manipulation
+      no. 3, pp. 507–523, Mar. 2013.                                                       with asynchronous off-policy updates,” in Proc. IEEE Int. Conf. Robot.
+  [9] J. Rosen, “Surgical robotics,” in Medical Devices: Surgical and Image-               Automat., 2017, pp. 3389–3396.
+      Guided Technologies, Hoboken, NJ, USA: Wiley, 2013, pp. 63–98.                  [35] S. Levine et al., “End-to-end training of deep visuomotor policies,” J.
+ [10] Z. Pan et al., “Comparison of medical image 3D reconstruction render-                Mach. Learn. Res., vol. 17, no. 1, pp. 1334–1373, 2016.
+      ing methods for robot assisted surgery,” in Proc. Int. Conf. Adv. Robot.        [36] V. C. Kumar et al., “Contextual reinforcement learning of visuo-tactile
+      Mechatronics, Hefei, China, 2018, pp. 94–99.                                         multi-fingered grasping policies,” 2019, arXiv:1911.09233v2.
+ [11] S. Merouche et al., “A robotic ultrasound scanner for automatic vessel          [37] X. Yu et al., “A robotic auto-focus system based on deep reinforcement
+      tracking and three-dimensional reconstruction of B-mode images,” IEEE                learning,” in Proc. 15th Int. Conf. Control, Automat., Robot. Vis., 2018,
+      Trans. Ultrason. Ferroelect., vol. 63, no. 1, pp. 35–46, Jan. 2016.                  pp. 204–209.
+ [12] K. Mathiassen et al., “An ultrasound robotic system using the commercial        [38] X. Tan et al., “Robot-assisted training in laparoscopy using deep rein-
+      robot UR5,” Front. Robot. AI, vol. 3, no. 1, pp. 1–16, 2016.                         forcement learning,” IEEE Robot. Autom. Lett., vol. 4, no. 2, pp. 485–492,
+ [13] C. Hennersperger et al., “Towards MRI-Based autonomous robotic US                    Apr. 2019.
+      acquisitions: A first feasibility study,” IEEE Trans. Med. Imag., vol. 36,      [39] J. Schulman et al., “Proximal policy optimization algorithms,” 2017,
+      no. 2, pp. 538–548, Feb. 2017.                                                       arXiv:1707.06347.
+ [14] M. L. Balter et al., “Adaptive kinematic control of a robotic venipuncture      [40] T. Lesort et al., “State representation learning for control: An overview,”
+      device based on stereo vision, ultrasound, and force guidance,” IEEE                 Neural Netw., vol. 108, pp. 379–392, 2018.
+      Trans. Ind. Electron., vol. 64, no. 2, pp. 1626–1635, Feb. 2017.                [41] A. Raffin et al., “Decoupling feature extraction from policy learning:
+ [15] I. Kuhlemann et al., “Patient localization for robotized ultrasound-guided           Assessing benefits of state representation learning in goal based robotics”
+      radiation therapy.” in Proc. Imag. Comput. Assistance Radiat. Ther., 2015,           2019, arXiv: 1901.08651.
+      pp. 105–112.                                                                    [42] R. S. Sutton and A. G. Barto, “Reinforcement learning: An introduction,”
+ [16] P. Chatelain et al., “Real-time needle detection and tracking using a                IEEE Trans. Neural. Netw. Learn. Syst., vol. 9, no. 5, pp. 1054–1054,
+      visually servoed 3D ultrasound probe,” in Proc. IEEE Int. Conf. Robot.               Sep. 1998.
+      Automat., 2013, pp. 1676–1681.                                                  [43] P. Varin et al., “A comparison of action spaces for learning manipu-
+ [17] B. Meng et al., “Robotassisted mirror ultrasound scanning for deep ve-               lation tasks,” in Proc. IEEE/RSJ Int. Conf. Intell. Robots Syst., 2019,
+      nous thrombosis detection using RGB-D sensor,” Multimedia Tools Appl.,               pp. 6015–6021.
+      vol. 75, no. 22, pp. 14247–14261, 2016.                                         [44] P. Falco and C. Natale, “On the stability of closed-loop inverse kinematics
+ [18] Y. Sasaki et al., “Development of compact portable ultrasound robot for              algorithms for redundant robots,” IEEE Trans. Robot., vol. 27, no. 4,
+      home healthcare,” J. Eng., vol. 2019, no. 14, pp. 495–499, 2019.                     pp. 780–784, Aug. 2011.
+ [19] M. Bowthorpe et al., “Smith predictor-based robot control for ultrasound-       [45] M. Felix et al., “ROS-Industrial universal robot meta-package,” Univer-
+      guided teleoperated beating-heart surgery,” IEEE J. Biomed. Health In-               sal Robot., 2012. [Online]. Available: https://github.com/ros-industrial/
+      form., vol. 18, no. 1, pp. 157–166, Jan. 2014.                                       universal_robot
+ [20] J. Seo et al., “Development of prototype system for robot-assisted ultra-       [46] C. Erwin and B. Yunfei, “PyBullet, a python module for physics simulation
+      sound diagnosis,” in Proc. 15th Int. Conf. Control, Automat. Syst., 2015,            for games,” PyBullet, 2016. [Online]. Available: http://pybullet.org/
+      pp. 1285–1288.
+
+
+
+
+Authorized licensed use limited to: University of Chinese Academy of SciencesCAS. Downloaded on May 08,2026 at 03:37:37 UTC from IEEE Xplore. Restrictions apply.
+

@@ -1,0 +1,107 @@
+cmake_minimum_required(VERSION 3.8)
+project(hello_moveit)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# 寻找依赖包
+find_package(ament_cmake REQUIRED)
+
+# ROS2 核心依赖
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)          # 用于 joint_state 订阅
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+# MoveIt 相关
+find_package(moveit_ros_planning_interface REQUIRED)
+find_package(moveit_visual_tools REQUIRED)  # 若不需要可移除，但原有代码有包含
+
+# 碰撞对象所需
+find_package(shape_msgs REQUIRED)
+
+# PCL 相关
+find_package(PCL REQUIRED)                  # PCL 核心库
+find_package(pcl_conversions REQUIRED)      # ROS-PCL 转换
+
+# 包含 PCL 头文件路径（传统方式，确保能找到 PCL 头文件）
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
+# 添加可执行文件
+add_executable(hello_moveit src/hello_moveit.cpp)
+add_executable(my_moveit_use src/my_moveit_use.cpp)
+add_executable(my_collision_define src/my_collision_define.cpp)
+
+# 设置编译特性（C++17）
+target_compile_features(hello_moveit PUBLIC cxx_std_17)
+target_compile_features(my_moveit_use PUBLIC cxx_std_17)
+target_compile_features(my_collision_define PUBLIC cxx_std_17)
+
+# 包含目录（如有自定义头文件）
+target_include_directories(hello_moveit PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_include_directories(my_moveit_use PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_include_directories(my_collision_define PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+# 处理依赖关系（使用 ament_target_dependencies 处理 ROS 包依赖）
+ament_target_dependencies(hello_moveit
+  rclcpp
+  moveit_ros_planning_interface
+  moveit_visual_tools
+  geometry_msgs
+  tf2_geometry_msgs
+  Eigen3
+  shape_msgs
+  pcl_conversions
+)
+
+ament_target_dependencies(my_moveit_use
+  rclcpp
+  moveit_ros_planning_interface
+  geometry_msgs
+  sensor_msgs
+  tf2_geometry_msgs
+  Eigen3
+  pcl_conversions
+)
+
+ament_target_dependencies(my_collision_define
+  rclcpp
+  moveit_ros_planning_interface
+  shape_msgs
+)
+
+# 显式链接 PCL 库（因为 ament_target_dependencies 不会自动链接第三方库）
+target_link_libraries(my_moveit_use ${PCL_LIBRARIES})
+
+# 安装可执行文件
+install(TARGETS
+  hello_moveit
+  my_moveit_use
+  my_collision_define
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# 安装 launch 文件夹（如有）
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# 测试相关（可选）
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_copyright_FOUND TRUE)
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()

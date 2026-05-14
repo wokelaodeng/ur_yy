@@ -1,0 +1,44 @@
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot name="optical_platiform_description">
+  <link
+    name="optical_platiform_base_link">
+    <inertial>
+      <origin
+        xyz="-8.3267E-16 2.2204E-16 -0.17855"
+        rpy="0 0 0" />
+      <mass
+        value="188.46" />
+      <inertia
+        ixx="25.957"
+        ixy="4.4314E-13"
+        ixz="-9.7919E-18"
+        iyy="9.5008"
+        iyz="5.0185E-16"
+        izz="33.607" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://optical_platiform_description/meshes/optical_platiform_base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <box size="1.5 0.9 0.1" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

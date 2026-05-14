@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mybot">
+  <!-- 包含桌子模型 -->
+  <xacro:include filename="$(find mybot_description)/urdf/table.xacro" />
+
+  <!-- 包含修改后的 UR7e 模型 -->
+  <xacro:include filename="$(find mybot_description)/urdf/ur7e.urdf" />
+
+  <!-- 将桌子固定到世界坐标系（world 已在 ur7e.urdf 中定义） -->
+  <joint name="table_to_world" type="fixed">
+    <parent link="world"/>
+    <child link="table_link"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>   <!-- 桌子位于世界原点，可根据需要调整 -->
+  </joint>
+  
+</robot>

@@ -1,0 +1,249 @@
+===========================================
+UR Ultrasonic Scan Project - Source Code Guide
+===========================================
+
+这个项目是一个基于ROS 2的超声波扫描系统，主要用于Universal Robots机械臂的工件扫描和处理。
+
+===========================================
+目录结构总览
+===========================================
+ur_ultrasonic_scan-master/
+├── src/                                    # 源代码目录
+│   ├── artifacts_workpiece_description/    # 工件描述包
+│   ├── camera_use/                        # 相机点云处理包
+│   ├── hello_moveit/                      # MoveIt运动规划包
+│   └── mybot_description/                 # UR机械臂描述包
+├── .gitignore                             # Git忽略配置
+├── git_push.txt                           # Git操作脚本
+├── output_problem.txt                     # 问题记录/配置片段
+└── learn.txt                              # 本文件
+
+===========================================
+根目录文件说明
+===========================================
+
+1. .gitignore
+   功能：Git版本控制的忽略配置文件
+   内容：指定哪些文件/目录不应被Git追踪
+   - build/     # ROS 2编译生成的构建目录
+   - install/   # ROS 2编译生成的安装目录
+   - log/       # ROS 2运行日志目录
+   - *.swp      # Vim编辑器交换文件
+   - *~         # 文本编辑器备份文件
+   - .vscode/   # VS Code配置目录
+
+2. git_push.txt
+   功能：Git操作快捷命令脚本
+   内容：包含常用的Git命令和Gazebo进程清理命令
+   - git add .                            # 添加所有变更文件
+   - git commit -m "..."                  # 提交变更
+   - git push                             # 推送到远程仓库
+   - killall -9 gzserver/gzclient/gazebo  # 强制终止Gazebo进程
+
+3. output_problem.txt
+   功能：问题记录和配置片段文件
+   内容：包含ros2_control配置示例，用于解决机械臂控制问题
+   - 定义了ur7e机械臂的硬件接口配置
+   - 包含6个关节（shoulder_pan, shoulder_lift, elbow, wrist_1/2/3）
+   - 配置了position/velocity/effort三种命令接口
+   - 配置了初始位置参数
+
+===========================================
+1. src/artifacts_workpiece_description/
+===========================================
+功能：工件/被测物体的URDF描述包，用于在ROS中描述扫描目标工件。
+
+子目录结构：
+├── config/
+│   └── joint_names_artifacts_workpiece_description.yaml
+│       # 关节名称配置文件，定义工件的关节命名
+
+├── launch/
+│   ├── display.launch
+│   │   # RViz显示启动文件，用于可视化工件模型
+│   └── gazebo.launch
+│       # Gazebo仿真启动文件，用于在仿真环境中加载工件
+
+├── meshes/
+│   └── workpiece_base_link.STL
+│       # 工件的3D网格模型文件（STL格式）
+
+├── urdf/
+│   ├── artifacts_workpiece_description.csv
+│   │   # URDF生成过程中的中间数据文件
+│   └── artifacts_workpiece_description.urdf
+│       # URDF机器人描述文件，定义工件的物理属性、视觉外观和碰撞模型
+
+├── CMakeLists.txt
+│   # 编译配置文件
+├── package.xml
+│   # ROS包声明文件
+└── export.log
+    # 导出日志文件
+
+===========================================
+2. src/camera_use/
+===========================================
+功能：相机点云数据处理包，包含多种点云滤波、分割和路径规划算法。
+
+子目录结构：
+├── launch/
+│   ├── camera.launch copy.py
+│   │   # 相机启动文件副本（备份）
+│   └── camera.launch.py
+│       # 相机启动文件，配置相机节点和参数
+
+├── src/
+│   ├── my_camera_use.cpp
+│   │   # 基础相机使用节点，点云数据获取与处理
+│   ├── my_camera_use_new.cpp
+│   │   # 新增节点：真实物理相机单帧处理
+│   ├── my_camera_use_noRGB.cpp
+│   │   # 无RGB信息的点云处理版本
+│   ├── real_point_cloud_deal_view.cpp
+│   │   # 真实点云处理结果离线查看节点
+│   ├── my_camera_use copy.cpp
+│   │   # 基础版本副本
+│   ├── my_camera_use copy 2.cpp
+│   │   # 二次副本
+│   ├── my_camera_use (PassThrough + VoxelGrid).cpp
+│   │   # 点云滤波：直通滤波 + 体素栅格降采样
+│   ├── my_camera_use copy(PassThrough + VoxelGrid+RANSAC 平面分割).cpp
+│   │   # 点云处理：滤波 + RANSAC平面分割
+│   ├── my_camera_use copy(PassThrough + VoxelGrid+RANSAC 平面分割+PCA法向量).cpp
+│   │   # 点云处理：滤波 + 平面分割 + PCA法向量估计
+│   └── my_camera_use copy(PassThrough + VoxelGrid+RANSAC 平面分割+PCA法向量+切片路径规划).cpp
+│       # 完整流程：滤波 + 分割 + 法向量 + 切片路径规划
+
+├── CMakeLists.txt
+│   # 编译配置，依赖PCL 1.13、VTK、OpenCV等
+├── LICENSE
+│   # 许可证文件
+└── package.xml
+    # ROS包声明文件
+
+技术栈：
+- PCL (Point Cloud Library) 1.13
+- VTK (可视化工具库)
+- OpenCV
+- ROS 2 (rclcpp, sensor_msgs, cv_bridge, pcl_conversions)
+
+===========================================
+3. src/hello_moveit/
+===========================================
+功能：MoveIt运动规划包，实现机械臂的运动控制和路径规划。
+
+子目录结构：
+├── launch/
+│   └── plan_point.launch.py
+│       # 点位规划启动文件
+
+├── src/
+│   ├── hello_moveit.cpp
+│   │   # MoveIt基础示例，展示基本运动规划流程
+│   ├── my_moveit_use.cpp
+│   │   # 自定义MoveIt使用节点，核心运动控制逻辑
+│   ├── my_moveit_use copy.cpp
+│   │   # 副本文件
+│   ├── my_moveit_use copy (gpt没加功能之前).cpp
+│   │   # GPT优化前的版本（历史备份）
+│   ├── my_moveit_use copy (3.18.21.18).cpp
+│   │   # 时间戳备份版本
+│   ├── my_moveit_use copy (3.23.15.46).cpp
+│   │   # 时间戳备份版本
+│   ├── my_collision_define.cpp
+│   │   # 碰撞检测定义节点，自定义碰撞物体
+│   ├── pcl_scan_workpiece_window.cpp
+│   │   # PCL扫描工件窗口，可视化扫描结果
+│   └── pcl_scan_workpiece_window (窗口).cpp
+│       # PCL窗口副本
+
+├── CMakeLists.txt
+│   # 编译配置，依赖MoveIt、PCL、VTK等
+├── CMakeLists copy.txt
+│   # CMakeLists备份
+├── package.xml
+│   # ROS包声明文件
+└── package copy.xml
+    # package.xml备份
+
+技术栈：
+- MoveIt 2 (运动规划框架)
+- PCL (点云处理)
+- VTK (可视化)
+- ROS 2 (rclcpp, geometry_msgs, sensor_msgs)
+
+===========================================
+4. src/mybot_description/
+===========================================
+功能：Universal Robots系列机械臂的描述包，包含多种UR型号的配置和模型。
+
+支持的UR机械臂型号：
+- ur3, ur3e, ur5, ur5e, ur7e, ur8long
+- ur10, ur10e, ur12e, ur15, ur16e, ur18, ur20, ur30
+
+子目录结构：
+├── config/
+│   ├── initial_positions.yaml
+│   │   # 机械臂初始位置配置
+│   └── [型号]/
+│       ├── default_kinematics.yaml
+│       │   # 默认运动学参数配置
+│       ├── joint_limits.yaml
+│       │   # 关节限位配置
+│       ├── physical_parameters.yaml
+│       │   # 物理参数配置
+│       └── visual_parameters.yaml
+│           # 视觉参数配置
+
+├── meshes/
+│   └── [型号]/
+│       ├── collision/
+│       │   # 碰撞检测网格（STL格式）
+│       │   ├── base.stl
+│       │   ├── forearm.stl
+│       │   ├── shoulder.stl
+│       │   ├── upperarm.stl
+│       │   ├── wrist1.stl
+│       │   ├── wrist2.stl
+│       │   └── wrist3.stl
+│       └── visual/
+│           # 可视化网格（DAE格式）
+│           ├── base.dae
+│           ├── forearm.dae
+│           ├── shoulder.dae
+│           ├── upperarm.dae
+│           ├── wrist1.dae
+│           ├── wrist2.dae
+│           └── wrist3.dae
+
+├── CMakeLists.txt
+│   # 编译配置文件
+└── package.xml
+    # ROS包声明文件
+
+===========================================
+项目工作流程
+===========================================
+1. 启动机械臂描述 → mybot_description
+2. 启动MoveIt运动规划 → hello_moveit
+3. 启动相机点云处理 → camera_use
+4. 加载工件模型 → artifacts_workpiece_description
+
+典型使用场景：
+- 工件扫描：使用camera_use获取点云数据
+- 路径规划：使用hello_moveit规划扫描路径
+- 仿真验证：在Gazebo中加载工件进行验证
+
+===========================================
+编译说明
+===========================================
+1. 确保已安装依赖：ROS 2, MoveIt 2, PCL 1.13, VTK, OpenCV
+2. 在工作空间根目录执行：
+   colcon build --symlink-install
+3. 运行前需source环境：
+   source install/setup.bash
+
+===========================================
+最后更新：2024年
+===========================================

@@ -1,0 +1,27 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: mybot_description
+    relative_path: urdf/ur7e.urdf.xacro
+  srdf:
+    relative_path: config/ur7e.srdf
+  package_settings:
+    author_name: lklmn
+    author_email: 1743381878@qq.com
+    generated_timestamp: 1778422003
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+      - effort
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+      - effort
