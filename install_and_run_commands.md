@@ -64,7 +64,7 @@ source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 source install/setup.bash
 
-cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan-master
 conda deactivate 2>/dev/null || true
 source /opt/ros/humble/setup.bash
 export PCL_ROOT=/home/user/documents/learning/RL_pre/ur_ultrasonic_scan_deps/pcl-1.13.0-install
@@ -82,7 +82,7 @@ pkill -f gzserver
 pkill -f gzclient
 pkill -f gazebo
 
-cd ~/documents/learning/RL_pre/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+cd ~/documents/learning/RL_pre/ur_ultrasonic_scan-master
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 export LD_LIBRARY_PATH=/home/user/documents/learning/RL_pre/ur_ultrasonic_scan_deps/pcl-1.13.0-install/lib:$LD_LIBRARY_PATH
@@ -101,7 +101,7 @@ ros2 launch realsense2_camera rs_launch.py pointcloud.enable:=true align_depth.e
 另开终端：
 
 ```bash
-cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan-master/ur_ultrasonic_scan-master
+cd /home/user/documents/learning/RL_pre/ur_ultrasonic_scan-master
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 ros2 run camera_use my_camera_use_new
